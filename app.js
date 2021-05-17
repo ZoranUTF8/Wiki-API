@@ -36,17 +36,63 @@ const Article = mongoose.model(
 // END OF MONGODB  SET UP
 
 // ROUTES
-app.get("/articles", function(req, res) {
 
+// CHAINED ROUTE HANDLER
+//requests targeting all items
+app.route("/articles")
+  .get(function(req, res) {
+    Article.find({}, function(err, results) {
+      if (!err) {
+        res.send(results);
+      } else {
+        res.send("ERROR: " + err);
+      }
+    });
+  })
+  .post(function(req, res) {
 
-  Article.find({}, function(err, results) {
-    if (!err) {
-      res.send(results);
-    } else {
-      res.send("ERROR: " + err);
-    }
+    const newArticle = new Article({
+      title: req.body.title,
+      content: req.body.content
+    });
+
+    newArticle.save(function(err) {
+      if (!err) {
+        res.send("Article added.")
+      } else {
+        res.send(err);
+      }
+    });
+  })
+  .delete(function(req, res) {
+
+    Article.deleteMany({}, function(err) {
+      if (!err) {
+        res.send("All articles deleted.")
+      } else {
+        res.send(err);
+      }
+    });
   });
-});
+//request for a single a specific item using route parametres
+app.route("/articles/:specificArticleTitle")
+  .get(function(req, res) {
+
+    Article.findOne({
+      title: req.params.specificArticleTitle
+    }, function(err, result) {
+      if (result) {
+        res.send("FOUND MATCH: "+result)
+        console.log("FOUND MATCH");
+      } else {
+        res.send("NO MATCH: "+err)
+        console.log("ERROR " + err);
+      }
+    })
+  })
+
+
+// ------------------------
 
 app.listen(3000, function() {
   console.log("Server running on 3000");
